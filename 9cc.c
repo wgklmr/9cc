@@ -17,13 +17,13 @@ typedef struct Token Token;
 // トークン型
 struct Token {
   TokenKind kind; // トークンの型
-  Token *next;    // 次の入力トークン
+  Token *next;    // 次の入力トークン(のポインタ)
   int val;        // kindがTK_NUMの場合、その数値
   char *str;      // トークン文字列
 };
 
 // 現在着目しているトークン
-Token *token;
+Token *token; // tokenはToken型のポインタ、グローバルに定義
 
 // エラーを報告するための関数
 // printfと同じ引数を取る
@@ -37,7 +37,7 @@ void error(char *fmt, ...) {
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
-bool consume(char op) {
+bool consume(char op) { // opは'+'なので、足し算ならtrue
   if (token->kind != TK_RESERVED || token->str[0] != op)
     return false;
   token = token->next;
@@ -68,15 +68,19 @@ bool at_eof() {
 
 // 新しいトークンを作成してcurに繋げる
 Token *new_token(TokenKind kind, Token *cur, char *str) {
-  Token *tok = calloc(1, sizeof(Token));
-  tok->kind = kind;
-  tok->str = str;
-  cur->next = tok;
-  return tok;
+  // 32byte確保
+  // ex) tok = 0x961b20
+  Token *tok = calloc(1, sizeof(Token)); // 確保したメモリ領域の先頭ポインタを返す
+  tok->kind = kind; // トークンの型(記号 or 数字 or 終端)
+  tok->str = str; // strは文字列のポインタ(char *str)
+  cur->next = tok; // 引数で渡されたトークンポインタ(cur)のnextを定義
+  return tok; // 作ったトークンのポインタを返す
 }
 
 // 入力文字列pをトークナイズしてそれを返す
-Token *tokenize(char *p) {
+Token *tokenize(char *p) { // '1+2+3'のような文字列のポインタが引数
+  // curのnextを決めていく
+
   Token head;
   head.next = NULL;
   Token *cur = &head;
@@ -95,7 +99,7 @@ Token *tokenize(char *p) {
 
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
-      cur->val = strtol(p, &p, 10);
+      cur->val = strtol(p, &p, 10); //Tokenのvalメンバーを更新、kindがTK_NUMの場合その数値が入る
       continue;
     }
 
@@ -103,7 +107,7 @@ Token *tokenize(char *p) {
   }
 
   new_token(TK_EOF, cur, p);
-  return head.next;
+  return head.next; // 次のポインタを返す
 }
 
 int main(int argc, char **argv) {
