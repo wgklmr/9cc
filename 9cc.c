@@ -23,7 +23,7 @@ struct Token {
 };
 
 // 現在着目しているトークン
-Token *token; // tokenはToken型のポインタ、グローバルに定義
+Token *token;
 
 // エラーを報告するための関数
 // printfと同じ引数を取る
@@ -66,40 +66,39 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
-// 新しいトークンを作成してcurに繋げる
 Token *new_token(TokenKind kind, Token *cur, char *str) {
-  // 32byte確保
-  // ex) tok = 0x961b20
-  Token *tok = calloc(1, sizeof(Token)); // 確保したメモリ領域の先頭ポインタを返す
+  Token *tok = calloc(1, sizeof(Token)); // 32byte確保
+
   tok->kind = kind; // トークンの型(記号 or 数字 or 終端)
   tok->str = str; // strは文字列のポインタ(char *str)
+
   cur->next = tok; // 引数で渡されたトークンポインタ(cur)のnextを定義
+
   return tok; // 作ったトークンのポインタを返す
 }
 
-// 入力文字列pをトークナイズしてそれを返す
-Token *tokenize(char *p) { // '1+2+3'のような文字列のポインタが引数
-  // curのnextを決めていく
-
+Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
   Token *cur = &head;
 
   while (*p) {
-    // 空白文字をスキップ
     if (isspace(*p)) {
       p++;
       continue;
     }
 
     if (*p == '+' || *p == '-') {
-      cur = new_token(TK_RESERVED, cur, p++);
+      // p++は、pを渡す(p++を渡さない)が、その後にインクリメントされる
+      cur = new_token(TK_RESERVED, cur, p++); // Tokenポインタ(TK_RESERVEDで)を作成してcur->nextに代入。作成したTokenポインタを返す
       continue;
     }
 
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
-      cur->val = strtol(p, &p, 10); //Tokenのvalメンバーを更新、kindがTK_NUMの場合その数値が入る
+
+      // 数値に変換できない最初の文字のポインタをpに代入する
+      cur->val = strtol(p, &p, 10); // ここでpがインクリメントされる
       continue;
     }
 
@@ -107,7 +106,7 @@ Token *tokenize(char *p) { // '1+2+3'のような文字列のポインタが引�
   }
 
   new_token(TK_EOF, cur, p);
-  return head.next; // 次のポインタを返す
+  return head.next;
 }
 
 int main(int argc, char **argv) {
@@ -116,27 +115,23 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // トークナイズする
   token = tokenize(argv[1]);
 
-  // アセンブリの前半部分を出力
   printf(".intel_syntax noprefix\n");
   printf(".globl main\n");
   printf("main:\n");
 
-  // 式の最初は数でなければならないので、それをチェックして
-  // 最初のmov命令を出力
+  // 式の最初は数でなければならない
   printf("  mov rax, %d\n", expect_number());
 
-  // `+ <数>`あるいは`- <数>`というトークンの並びを消費しつつ
-  // アセンブリを出力
+  // `+ <数>`あるいは`- <数>`というトークンの並びを消費しつつアセンブリを出力
   while (!at_eof()) {
-    if (consume('+')) {
-      printf("  add rax, %d\n", expect_number());
+    if (consume('+')) { // +ならtokenを進めてtrueを返す。-ならfalseを返す
+      printf("  add rax, %d\n", expect_number()); // expect_numberは現在の数字を返して、tokenを進める
       continue;
     }
 
-    expect('-');
+    expect('-'); // consumeと違い、boolではなくerrorを出す。tokenは進める
     printf("  sub rax, %d\n", expect_number());
   }
 
