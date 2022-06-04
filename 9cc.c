@@ -201,9 +201,9 @@ Node *relational() {
     else if (consume("<="))
       node = new_binary(ND_LE, node, add());
     else if (consume(">"))
-      node = new_binary(ND_SUB, add(), node);
+      node = new_binary(ND_LT, add(), node);
     else if (consume(">="))
-      node = new_binary(ND_SUB, add(), node);
+      node = new_binary(ND_LE, add(), node);
     else
       return node;
   }
@@ -282,29 +282,21 @@ void gen(Node *node) {
     printf("  idiv rdi\n");
     break;
   case ND_EQ:
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
     printf("  cmp rax, rdi\n");
     printf("  sete al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_NE:
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
     printf("  cmp rax, rdi\n");
     printf("  setne al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_LT:
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
     printf("  cmp rax, rdi\n");
     printf("  setl al\n");
     printf("  movzb rax, al\n");
     break;
   case ND_LE:
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
     printf("  cmp rax, rdi\n");
     printf("  setle al\n");
     printf("  movzb rax, al\n");
