@@ -2,15 +2,14 @@
 .globl main
 main:
   push 0
-  push 0
-  push 10
+  push 1
   pop rdi
   pop rax
-  sub rax, rdi
-  push rax
   pop rdi
   pop rax
-  sub rax, rdi
+  cmp rax, rdi
+  sete al
+  movzb rax, al
   push rax
   pop rax
   ret
