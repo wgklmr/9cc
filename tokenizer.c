@@ -20,6 +20,17 @@ bool consume(char *op) { // opは'+'なので、足し算ならtrue
   return true;
 }
 
+Token *consume_ident() {
+  if (token->kind == TK_IDENT) {
+    Token *tok = token;
+    token = token->next;
+
+    return tok;
+  }
+
+  return false;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
@@ -69,20 +80,20 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (*p >= 'a' && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
-      continue;
-    }
-
     if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") || startswith(p, ">=")) {
       cur = new_token(TK_RESERVED, cur, p, 2);
       p += 2;
       continue;
     }
 
-    if (strchr("+-*/()<>", *p)) {
+    if (strchr("+-*/()<>=;", *p)) {
       // p++は、pを渡す(p++を渡さない)が、その後にインクリメントされる
       cur = new_token(TK_RESERVED, cur, p++, 1); // Tokenポインタ(TK_RESERVEDで)を作成してcur->nextに代入。作成したTokenポインタを返す
+      continue;
+    }
+
+    if (*p >= 'a' && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
 

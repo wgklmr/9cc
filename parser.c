@@ -22,8 +22,29 @@ Node *new_num(int val) {
   return node;
 }
 
+Node *code[100]; // 100個のステートメント情報を格納する
+
+Node *stmt() {
+  Node *node = expr();
+
+  expect(";");
+
+  return node;
+}
+
 Node *expr() {
-  return equality();
+  return assign();
+}
+
+Node *assign() {
+  Node *node = equality();
+
+  for (;;) {
+    if (consume("="))
+      node = new_binary(ND_ASSIGN, node, assign());
+    else
+      return node;
+  }
 }
 
 Node *equality() {
@@ -98,6 +119,22 @@ Node *primary() {
     return node;
   }
 
-  // そうでなければ数値のはず
+  Token *tok = consume_ident();
+
+  if (tok) {
+    Node *node = new_node(ND_LVAR);
+    node->offset = (tok->str[0] - 97 + 1) * 8;
+    return node;
+  }
+
   return new_num(expect_number());
 }
+
+void program() {
+  int i = 0;
+
+  while(!at_eof())
+    code[i++] = stmt();
+
+  code[i] = NULL;
+};
