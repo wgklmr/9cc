@@ -32,7 +32,7 @@ Token *consume_ident() {
 }
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
-// それ以外の場合にはエラーを報告する。
+// それ以外の場合にはエ ラーを報告する。
 void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
     error("'%c'ではありません", op);
@@ -93,7 +93,16 @@ Token *tokenize(char *p) {
     }
 
     if (*p >= 'a' && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
+      char *c = p;
+      while (*c >= 'a' && *c <= 'z') {
+        c++;
+      }
+
+      int len = c - p;
+
+      cur = new_token(TK_IDENT, cur, p, len);
+
+      p = c;
       continue;
     }
 

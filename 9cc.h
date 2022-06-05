@@ -21,6 +21,14 @@ struct Token {
   int len;
 };
 
+typedef struct LVar LVar;
+struct LVar {
+  LVar *next; // 次の変数かNULL
+  char *name; // 変数の名前
+  int len;    // 名前の長さ
+  int offset; // RBPからのオフセット
+};
+
 typedef enum {
   ND_ADD, // +
   ND_SUB, // -
@@ -67,7 +75,9 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
+LVar *find_lvar(Token *tok);
 
 extern Token *token;
 extern Node *code[];
 extern char *user_input;
+extern LVar *locals;
