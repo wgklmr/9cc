@@ -2,6 +2,12 @@
 
 void gen(Node *node) {
   switch (node->kind) {
+  case ND_RETURN:
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
   case ND_NUM:
     // 数値をスタックに積む
     printf("  push %d\n", node->val);

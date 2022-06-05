@@ -2,6 +2,27 @@
 
 LVar *locals;
 
+Token *consume_ident() {
+  if (token->kind == TK_IDENT) {
+    Token *tok = token;
+    token = token->next;
+
+    return tok;
+  }
+
+  return false;
+}
+
+bool consume_return() {
+  if (token->kind == TK_RETURN) {
+    token = token->next;
+
+    return true;
+  }
+
+  return false;
+}
+
 LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next)
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
@@ -34,7 +55,14 @@ Node *new_num(int val) {
 Node *code[100]; // 100個のステートメント情報を格納する
 
 Node *stmt() {
-  Node *node = expr();
+  Node *node;
+
+  if (consume_return()) {
+    node = new_node(ND_RETURN);
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
 
   expect(";");
 

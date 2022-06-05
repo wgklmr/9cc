@@ -20,17 +20,6 @@ bool consume(char *op) { // opは'+'なので、足し算ならtrue
   return true;
 }
 
-Token *consume_ident() {
-  if (token->kind == TK_IDENT) {
-    Token *tok = token;
-    token = token->next;
-
-    return tok;
-  }
-
-  return false;
-}
-
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエ ラーを報告する。
 void expect(char *op) {
@@ -69,6 +58,13 @@ bool startswith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+int is_alnum(char c) {
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
+}
+
 Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
@@ -89,6 +85,12 @@ Token *tokenize(char *p) {
     if (strchr("+-*/()<>=;", *p)) {
       // p++は、pを渡す(p++を渡さない)が、その後にインクリメントされる
       cur = new_token(TK_RESERVED, cur, p++, 1); // Tokenポインタ(TK_RESERVEDで)を作成してcur->nextに代入。作成したTokenポインタを返す
+      continue;
+    }
+
+    if (startswith(p, "return") && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
       continue;
     }
 
